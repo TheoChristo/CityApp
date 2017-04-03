@@ -43,4 +43,14 @@ export class Page1 {
         this.searching = true;
     }
 	
+	male(){
+		alert("male");
+	}
+	
+	female(){
+		alert("female");
+	}
+	
+	
+	
 }

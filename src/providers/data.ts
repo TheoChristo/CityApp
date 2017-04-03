@@ -17,7 +17,6 @@ export class Data {
 	private sqlite: SQLite;
 	
 	constructor(public platform: Platform, public http: Http) { //
-		console.log('Hello Data Provider');
 				
         this.items = [
             {title: 'one'},
