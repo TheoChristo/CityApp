@@ -13,20 +13,14 @@ import { SQLite,SQLiteObject } from '@ionic-native/sqlite';
 @Injectable()
 export class Data {
 	
-	items: any;
+	
+
 	private sqlite: SQLite;
+	private items: Array<{id: number, name: string}>;
 	
 	constructor(public platform: Platform, public http: Http) { //
 				
-        this.items = [
-            {title: 'one'},
-            {title: 'two'},
-            {title: 'three'},
-            {title: 'four'},
-            {title: 'five'},
-            {title: 'six'}
-        ]
-		
+
 		//Database
 		this.sqlite=new SQLite();
 		this.platform.ready().then(() => {
@@ -37,11 +31,10 @@ export class Data {
 	}
 
 	filterItems(searchTerm){
- 
-        return this.items.filter((item) => {
-            return item.title.toLowerCase().indexOf(searchTerm.toLowerCase()) > -1;
-        });     
- 
+		return this.items.filter((item) => {
+            return item.name.toLowerCase().indexOf(searchTerm.toLowerCase()) > -1;
+        });       
+  
     }
 	
 	
@@ -63,29 +56,88 @@ export class Data {
 						console.log("Table clear! /n Inserting Data..");
 						//insert Client Data
 						for(let pop=0; pop<10; pop++) {this.insertClient(db,"John", "male");}						
+						this.magic(db);
 					}, (error)=>{
 						console.log("Unable to clear table: "+error);
 					});
 				}, (err) => {
-					console.log('Unable to execute sql to create  table: ', err);
+					console.log('Unable to to create  table: ', err);
 				});
+				
 
 		}, (err) => {
 		  console.error('Unable to open database: ', err);
 		});
 			
 	}
-
-	insertClient(db,name,gender){
-		db.executeSql('INSERT  INTO Clients (name, gender) VALUES (?,?,?,?,?,?)' ,[name, gender], {})
-		.then(() => {
-			console.log("Inserted Client "+name);						
-		}, (error)=>{
-			console.log("Unable to insert client : "+error);
+	
+    insertClient(db,name,gender){
+        db.executeSql('INSERT  INTO Clients (name, gender) VALUES (?,?)' ,[name, gender], {})
+        .then(() => {
+            console.log("Inserted Client "+name);                        
+        }, (error)=>{
+            console.log("Unable to insert client : "+error);
+        });
+    }
+	
+	
+	
+	magic(db){
+		return new Promise((resolve, reject) => {
+			this.items=[];
+			this.getClientNames(db)
+			.then((result) => {
+				for (let x in result) {
+					this.items.push({
+						id:  result[x].id,
+						name:  result[x].name
+					});	
+				}
+				resolve();
+			},(error) => {
+				console.log("ERROR: ", error);
+				reject(error);
+			});
 		});
-
-		
 	}
+	
+	
+	
+	
+	
+	getClientNames(db) {
+        return new Promise((resolve, reject) => {
+			console.log("getClientNames");
+			db.executeSql("SELECT id,name FROM Clients WHERE 1=1", [])
+			.then((resultSet) => {
+				let clients = [];
+				if(resultSet.rows.length > 0) {
+					for(let x = 0; x < resultSet.rows.length; x++) {
+						clients.push({
+							id:  resultSet.rows.item(x).id,
+							name:  resultSet.rows.item(x).name
+						});	
+					}
+				}
+				console.log("getClientNames Resolve");
+				resolve(clients);
+			},(error) => {
+				console.log("getClientNames ERROR: ", error);
+				reject(error);
+			});
+		
+        });
+    }
+	
+		
+	closeDB(db) {
+        db.close(function() {
+            console.log("DB closed!");
+        }, function (error) {
+            console.log("Error closing DB:" + error.message);
+        });
+    }
+
 	
 	
 }
