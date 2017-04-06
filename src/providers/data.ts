@@ -16,10 +16,10 @@ export class Data {
 	
 
 	private sqlite: SQLite;
-	private items: Array<{id: number, name: string}>;
+	private items: Array<{id: number, name: string}> ;
+	public clients: Array<{id: number, name: string, gender: string}> ;
 	
-	constructor(public platform: Platform, public http: Http) { //
-				
+	constructor(public platform: Platform, public http: Http) { 
 
 		//Database
 		this.sqlite=new SQLite();
@@ -56,7 +56,7 @@ export class Data {
 						console.log("Table clear! /n Inserting Data..");
 						//insert Client Data
 						for(let pop=0; pop<10; pop++) {this.insertClient(db,"John", "male");}						
-						this.magic(db);
+						this.magic(db).then(()=>{ this.closeDB(db); });
 					}, (error)=>{
 						console.log("Unable to clear table: "+error);
 					});
@@ -79,7 +79,6 @@ export class Data {
             console.log("Unable to insert client : "+error);
         });
     }
-	
 	
 	
 	magic(db){
@@ -110,17 +109,17 @@ export class Data {
 			console.log("getClientNames");
 			db.executeSql("SELECT id,name FROM Clients WHERE 1=1", [])
 			.then((resultSet) => {
-				let clients = [];
+				let searchRs = [];
 				if(resultSet.rows.length > 0) {
 					for(let x = 0; x < resultSet.rows.length; x++) {
-						clients.push({
+						searchRs.push({
 							id:  resultSet.rows.item(x).id,
 							name:  resultSet.rows.item(x).name
 						});	
 					}
 				}
 				console.log("getClientNames Resolve");
-				resolve(clients);
+				resolve(searchRs);
 			},(error) => {
 				console.log("getClientNames ERROR: ", error);
 				reject(error);
@@ -137,6 +136,49 @@ export class Data {
             console.log("Error closing DB:" + error.message);
         });
     }
+	
+	
+	
+	
+	queryListExecuter(query){
+		
+		return new Promise((resolve, reject) => {
+			this.sqlite.create({
+			  name: 'data.db',
+			  location: 'default' 
+			  
+			}).then((db: SQLiteObject) => {
+				db.executeSql(query, [])
+				.then((resultSet) => {
+					this.clients = [];
+					if(resultSet.rows.length > 0) {
+						for(let x = 0; x < resultSet.rows.length; x++) {
+							this.clients.push({
+								id:  resultSet.rows.item(x).id,
+								name:  resultSet.rows.item(x).name,
+								gender: resultSet.rows.item(x).gender
+							});	
+						}
+					}
+					console.log("queryExecuter Resolved! query:"+query);
+					this.closeDB(db);
+					resolve();
+				}, (error)=>{
+					console.log("Unable to exequte "+query+" , error :"+error);
+					reject(error);
+				});
+			},(err) => {
+			  console.error('Unable to open database: ', err);
+			  reject(err);
+			});
+		
+		});
+		
+	}
+	
+	checkUpdate(){
+		
+	}
 
 	
 	

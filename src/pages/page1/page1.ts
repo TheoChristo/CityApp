@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { NavController } from 'ionic-angular';
 import { Data } from '../../providers/data';
 import { FormControl } from '@angular/forms';
+import { Page2 } from '../../pages/page2/page2';
 import 'rxjs/add/operator/debounceTime';
 
 @Component({
@@ -53,11 +54,17 @@ export class Page1 {
     }
 	
 	male(){
-		alert("male");
+		let query="SELECT id,name FROM Clients WHERE 1=1"
+		this.dataService.queryListExecuter(query).then(()=>{
+			this.navCtrl.push(Page2); 
+		});
 	}
 	
 	female(){
-		alert("female");
+		let query="SELECT id,name FROM Clients WHERE 0=1"
+		this.dataService.queryListExecuter(query).then(()=>{
+			this.navCtrl.push(Page2);
+		});
 	}
 	
 	
