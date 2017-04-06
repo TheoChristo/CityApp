@@ -18,12 +18,16 @@ export class Data {
 	private sqlite: SQLite;
 	private items: Array<{id: number, name: string}> ;
 	public clients: Array<{id: number, name: string, gender: string}> ;
-	
-	constructor(public platform: Platform, public http: Http) { 
-
+	public cloudclients: any;
+	private http:any;
+	constructor(public platform: Platform, public chttp: Http) { 
+		
+		this.http= this.chttp;
+		
 		//Database
 		this.sqlite=new SQLite();
 		this.platform.ready().then(() => {
+			
 			console.log("createTable");
 			this.createTable();
 		});	
@@ -55,8 +59,15 @@ export class Data {
 					.then(() => {
 						console.log("Table clear! /n Inserting Data..");
 						//insert Client Data
-						for(let pop=0; pop<10; pop++) {this.insertClient(db,"John", "male");}						
-						this.magic(db).then(()=>{ this.closeDB(db); });
+						
+						this.checkUpdate().then(()=>{
+							
+							for(let pop=0; pop<10; pop++) {this.insertClient(db,this.cloudclients[pop].name.first, this.cloudclients[pop].gender);}						
+							
+							this.magic(db).then(()=>{ this.closeDB(db); });
+							
+						});
+						
 					}, (error)=>{
 						console.log("Unable to clear table: "+error);
 					});
@@ -177,7 +188,18 @@ export class Data {
 	}
 	
 	checkUpdate(){
-		
+		return new Promise((resolve, reject) => {
+			this.http.get('https://randomuser.me/api/?results=10&inc=name,gender&noinfo').map(res => res.json())
+			.subscribe(datares => {
+				this.cloudclients = datares.results;
+				console.log("http get resolve");
+				resolve();
+			},err => {
+			console.log("Oops!");
+			reject(err);
+			});
+			
+		});
 	}
 
 	

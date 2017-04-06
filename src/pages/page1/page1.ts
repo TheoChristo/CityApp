@@ -61,7 +61,7 @@ export class Page1 {
 	}
 	
 	female(){
-		let query="SELECT id,name FROM Clients WHERE 0=1"
+		let query="SELECT id,name FROM Clients WHERE gender = 'female'"
 		this.dataService.queryListExecuter(query).then(()=>{
 			this.navCtrl.push(Page2);
 		});
